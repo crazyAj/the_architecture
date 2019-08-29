@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.2.xsd">
+
+    <!-- 注解扫描 -->
+    <context:component-scan base-package="cn.aj"/>
+
+    <!-- aop cglib代理 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!-- 引入属性文件 -->
+    <!-- PropertyPlaceholderConfigurer 解决了占位符问题 -->
+    <bean id="propertyPlaceholderConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <!-- 在解析一个占位符的时候，会先用系统属性来尝试，然后才会用指定的属性文件 -->
+        <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
+        <!-- 当找不到这个配置时，则跳过 -->
+        <property name="ignoreResourceNotFound" value="true"/>
+        <property name="locations">
+            <list>
+                <value>classpath:application.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 引入属性文件 -->
+    <!-- PropertiesFactoryBean 有个locations属性，也是接收一个数组  -->
+    <bean id="configurationProperties"
+          class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="locations">
+            <list>
+                <value>classpath:application.properties</value>
+                <value>classpath:exception.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!-- 自定义属性类注入 -->
+    <bean id="propertyConfigurer" class="cn.aj.commons.resource.PropertyConfigurer">
+        <property name="properties" ref="configurationProperties"/>
+    </bean>
+
+    <!-- 引入配置文件 -->
+    <import resource="spring-datasource.xml"/>
+    <import resource="dubbo-provider.xml"/>
+
+</beans>

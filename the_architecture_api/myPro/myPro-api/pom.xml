@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>myPro</artifactId>
+        <groupId>cn.aj.project</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>myPro-api</artifactId>
+    <packaging>war</packaging>
+
+    <dependencies>
+        <dependency>
+            <artifactId>myPro-service</artifactId>
+            <groupId>cn.aj.project</groupId>
+            <version>1.0-SNAPSHOT</version>
+            <type>jar</type>
+        </dependency>
+    </dependencies>
+
+    <!-- 构建所需配置 -->
+    <build>
+        <!-- 打包工程名 -->
+        <finalName>myPro-api</finalName>
+        <!-- 资源文件配置 -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+        </plugins>
+        <!-- 资源文件${key}指向value配置 -->
+        <resources>
+            <resource>
+                <!-- 扫描资源路径 -->
+                <directory>src/main/resources</directory>
+                <includes>
+                    <!-- **表示此文件路径及其子路径, *.xxx表示任意xxx后缀的文件 -->
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                    <include>**/*.vm</include>
+                </includes>
+                <!-- 是否打开上述过滤, true启用上述扫描, false上述失效 -->
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
+    <!-- 配置Maven不同运行环境配置 -->
+    <profiles>
+        <!-- development -->
+        <profile>
+            <!-- 环境配置Id -->
+            <id>development</id>
+            <!-- 构建环境配置 -->
+            <build>
+                <!-- 指定配置文件 -->
+                <filters>
+                    <filter>filter-development.properties</filter>
+                </filters>
+            </build>
+        </profile>
+        <!-- test -->
+        <profile>
+            <id>test</id>
+            <build>
+                <filters>
+                    <filter>filter-test.properties</filter>
+                </filters>
+            </build>
+        </profile>
+        <!-- production -->
+        <profile>
+            <id>production</id>
+            <build>
+                <filters>
+                    <filter>filter-production.properties</filter>
+                </filters>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

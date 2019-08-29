@@ -1,0 +1,148 @@
+<!-- Logback为取代log4j而生。 Logback由log4j的创立者Ceki Gülcü设计。以十多年设计工业级记录系统的经验为基础，所创建的logback比现有任何记录系统更快、占用资源更少，有时差距非常大
+	需要添加的 JAR 包: logback-core.jar – logback 核心包，必备 slf4j-api.jar – 通用日志接口包，可以在logback与其他记录系统如log4j和java.util.logging
+	(JUL)之间轻松互相切换 Logback-classic – 实现了 SLF4J API，扩展了core模块
+	1. 系统启动，默认加载classpath下的logback.xml
+        或者 logback-test.xml。 这里可以把默认配置文件的位置作为系统属性进行指定 java -Dlogback.configurationFile=/path/to/config.xml
+        chapters.configuration.MyApp1
+	2. 在根元素configuration中配置属性scan=”true”后，当配置文件修改后自动重新加载，默认每分钟扫描一次。
+        configuration元素的 scanPeriod 属性控制扫描周期，其值可以带时间单位，包括：milliseconds、seconds、minutes和hours。
+        如果没写明时间单位，则默认为毫秒。 -->
+<configuration scan="true" scanPeriod="60 seconds" debug="false">
+    <!-- 尽量别用绝对路径，如果带参数不同容器路径解释可能不同 -->
+    <property name="LOG_HOME" value="${log.path}"/>
+    <property name="AppName" value="${app.name}"/>
+
+    <!-- 控制台输出 -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%X{requestId} %X{remoteAddr} %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{16}] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--时间滚动输出到文件 level为 INFO 日志-->
+    <appender name="file-info" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!--
+            LevelFilter： 级别过滤器，根据日志级别进行过滤。如果日志级别等于配置级别，过滤器会根据onMath 和 onMismatch接收或拒绝日志。有以下子节点：
+                <level>:设置过滤级别
+                <onMatch>:用于配置符合过滤条件的操作
+                <onMismatch>:用于配置不符合过滤条件的操作
+
+                    DENY，日志将立即被抛弃不再经过其他过滤器；
+                    NEUTRAL，有序列表里的下个过滤器过接着处理日志；
+                    ACCEPT，日志会被立即处理，不再经过剩余过滤器。
+
+            将过滤器的日志级别配置为INFO，所有INFO级别的日志交给appender处理，非INFO级别的日志，被过滤掉。
+        -->
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOG_HOME}/${AppName}-info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- 日志文件输出文件名格式 -->
+            <FileNamePattern>${LOG_HOME}/${AppName}-info.%d{yyyy-MM-dd}.%i.log</FileNamePattern>
+            <!-- 日志文件保留天数（按FileNamePattern计算，如果FileNamePattern定义为按月存储，则此处表示保留10个月） -->
+            <MaxHistory>10</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <!-- %X{}引用变量  %d{}时间格式  %thread线程  %-5level输出等级从左占5字符  %logger{16}输出的类最长16字符  %msg输出内容  %n换行 -->
+            <pattern>%X{requestId} %X{remoteAddr} %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{16}] %msg%n</pattern>
+        </encoder>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <!-- 日志文件的最大的大小 -->
+            <MaxFileSize>32MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <!-- 异步缓冲INFO的日志，当缓冲数量到一定的阈值时，才会把日志写到文件里面 -->
+    <appender name="info-asyn" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="file-info"/>
+        <!-- 默认情况下，当BlockingQueue还有20%容量，他将丢弃TRACE、DEBUG和INFO级别的event，只保留WARN和ERROR级别的event。为了保持所有的events，设置该值为0 -->
+        <discardingThreshold>0</discardingThreshold>
+        <!-- 缓冲512个事件 -->
+        <queueSize>512</queueSize>
+    </appender>
+
+    <!-- 时间滚动输出 level为 DEBUG 日志 -->
+    <appender name="file-debug" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>DEBUG</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOG_HOME}/${AppName}-debug.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/${AppName}-debug.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%X{requestId} %X{remoteAddr} %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{16}] %msg%n</pattern>
+        </encoder>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <!-- 日志文件的最大的大小 -->
+            <MaxFileSize>32MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <!--时间滚动输出 level为 ERROR日志-->
+    <appender name="file-error" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOG_HOME}/${AppName}-error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/${AppName}-error.%d{yyyy-MM-dd}.log</FileNamePattern>
+            <MaxHistory>30</MaxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%X{requestId} %X{remoteAddr} %d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%logger{16}] %msg%n</pattern>
+        </encoder>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <!-- 日志文件的最大的大小 -->
+            <MaxFileSize>32MB</MaxFileSize>
+        </triggeringPolicy>
+    </appender>
+
+    <!-- disruptor 日志 -->
+    <appender name="disruptor" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>INFO</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <file>${LOG_HOME}/callback/${AppName}_disruptor.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <FileNamePattern>${LOG_HOME}/callback/${AppName}_callback.%d{yyyy-MM}.%i.log</FileNamePattern>
+            <!-- 保存12个月 -->
+            <MaxHistory>12</MaxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <!-- 文件大小32M -->
+                <maxFileSize>32MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- mybatis的日志，只需要记录错误日志 -->
+    <logger name="org.apache.ibatis">
+        <level value="${log.org.apache.ibatis.level}"/>
+    </logger>
+
+    <!--test日志-->
+    <logger name="disruptor">
+        <appender-ref ref="disruptor"/>
+    </logger>
+
+    <!-- root标签也就是logger标签，但是root只有一个level属性 -->
+    <root level="${log.root.level}">
+        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="file-debug"/>
+        <appender-ref ref="file-error"/>
+        <appender-ref ref="info-asyn"/>
+    </root>
+</configuration>

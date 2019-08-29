@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://code.alibabatech.com/schema/dubbo
+        http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <!-- 定义了提供方应用信息，用于计算依赖关系 -->
+    <dubbo:application name="myPro-provider"/>
+    <!-- 使用zookeeper注册中心暴露服务，注意要先开启zookeeper -->
+    <dubbo:registry address="${zookeeper.address}" port="${zookeeper.port}"/>
+    <!-- 用dubbo协议暴露服务 -->
+    <dubbo:protocol name="${protocol.name}" port="${protocol.port}" serialization="${protocol.serialization}"/>
+
+    <!-- TestDubboProvider服务 -->
+    <dubbo:service interface="cn.aj.service.TestService" ref="testService" timeout="5000"/>
+
+</beans>
